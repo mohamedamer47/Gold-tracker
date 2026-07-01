@@ -1,8 +1,7 @@
 name: Run Gold Bot
-
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/10 * * * *' # يعمل كل 10 دقائق
   workflow_dispatch:
 
 jobs:
@@ -11,14 +10,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-
       - name: Install requirements
-        run: pip install requests telebot
-
+        run: pip install requests
       - name: Run script
         run: python gold_bot.py
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
