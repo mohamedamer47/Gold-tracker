@@ -1,7 +1,7 @@
 name: Run Gold Bot
 on:
   schedule:
-    - cron: '*/10 * * * *' # يعمل كل 10 دقائق
+    - cron: '*/10 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -21,4 +21,3 @@ jobs:
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
- 
