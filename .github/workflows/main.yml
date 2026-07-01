@@ -1,7 +1,8 @@
 name: Run Gold Bot
+
 on:
   schedule:
-    - cron: '*/30 * * * *' # يعمل كل 30 دقيقة
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -10,11 +11,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
+
       - name: Install requirements
-        run: pip install requests telebot # أو المكتبات التي يستخدمها بوتك
+        run: pip install requests telebot
+
       - name: Run script
         run: python gold_bot.py
