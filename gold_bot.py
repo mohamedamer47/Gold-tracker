@@ -154,8 +154,11 @@ def send_telegram_alert(message):
     payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "Markdown"}
     try:
         response = requests.post(telegram_url, json=payload, timeout=10)
+        if response.status_code != 200:
+            print(f"رد تليجرام: {response.status_code} - {response.text}")
         return response.status_code == 200
-    except requests.RequestException:
+    except requests.RequestException as e:
+        print(f"خطأ في الاتصال بتليجرام: {e}")
         return False
 
 
