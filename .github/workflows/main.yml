@@ -1,8 +1,12 @@
 name: Run Gold Bot
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    # مُزاح عن الدقائق المدورة (00, 10, 20...) لتقليل الزحمة والتأخير في جدولة GitHub Actions
+    - cron: '3,13,23,33,43,53 * * * *'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -15,9 +19,18 @@ jobs:
         with:
           python-version: '3.9'
       - name: Install requirements
-        run: pip install requests
+        run: pip install -r requirements.txt
       - name: Run script
         run: python gold_bot.py
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
+      - name: Commit updated price state
+        run: |
+          if [ -n "$(git status --porcelain state.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add state.json
+            git commit -m "chore: update price state"
+            git push
+          fi
