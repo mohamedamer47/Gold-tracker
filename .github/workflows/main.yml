@@ -1,7 +1,8 @@
 name: Run Gold Bot
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    # مُزاح عن الدقائق المدورة (00, 10, 20...) لتقليل الزحمة والتأخير في جدولة GitHub Actions
+    - cron: '3,13,23,33,43,53 * * * *'
   workflow_dispatch:
 
 permissions:
