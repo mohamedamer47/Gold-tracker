@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تشخيص البشرة الذكي | تحليل شامل ووصفات مخصصة</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <span class="brand-icon">✨</span>
+    <span class="brand-name">تشخيص البشرة الذكي</span>
+  </div>
+  <div class="progress-wrap" id="progressWrap" hidden>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="progress-label" id="progressLabel">0%</span>
+  </div>
+</header>
+
+<main class="app-main">
+
+  <!-- شاشة الترحيب -->
+  <section id="screen-intro" class="screen active">
+    <div class="card intro-card">
+      <h1>اكتشفي / اكتشف مشاكل بشرتك في دقائق</h1>
+      <p class="lead">
+        سلسلة أسئلة مباشرة وبسيطة تحدد نوع بشرتك ومشاكلها (حب الشباب، الهالات، الرؤوس السوداء،
+        التجاعيد، التصبغات وغيرها)، وفي النهاية تحصل/تحصلين على تحليل تفصيلي مع روتين عناية
+        كامل ومنتجات مقترحة — طبية وطبيعية.
+      </p>
+
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div class="price-tag">٢٠$</div>
+          <h3>التحليل الرقمي الشامل</h3>
+          <p>تقرير تفصيلي بمشاكل بشرتك، أسبابها المحتملة، روتين يومي وأسبوعي، ومنتجات مقترحة (طبية وطبيعية).</p>
+        </div>
+        <div class="price-card featured">
+          <div class="price-tag">١٠٠$</div>
+          <h3>الكشف مع أخصائي / صيدلي</h3>
+          <p>متابعة طبية مباشرة مع أخصائي جلدية أو صيدلي مختص لمراجعة حالتك وتخصيص علاج دقيق.</p>
+        </div>
+      </div>
+
+      <p class="disclaimer">
+        ⚠️ هذا التطبيق أداة إرشادية لا تُغني عن الاستشارة الطبية المتخصصة، خصوصًا في الحالات الشديدة
+        أو المزمنة أو أثناء الحمل والرضاعة.
+      </p>
+
+      <button class="btn btn-primary" id="btnStart">ابدأ التحليل الآن</button>
+    </div>
+  </section>
+
+  <!-- شاشة الأسئلة -->
+  <section id="screen-quiz" class="screen">
+    <div class="card quiz-card">
+      <div id="questionContainer"></div>
+      <div class="nav-buttons">
+        <button class="btn btn-ghost" id="btnBack">رجوع</button>
+        <button class="btn btn-primary" id="btnNext">التالي</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- شاشة تحميل بسيطة -->
+  <section id="screen-loading" class="screen">
+    <div class="card loading-card">
+      <div class="spinner"></div>
+      <p>جاري تحليل إجاباتك...</p>
+    </div>
+  </section>
+
+  <!-- شاشة النتيجة -->
+  <section id="screen-result" class="screen">
+    <div class="card result-card" id="resultContainer"></div>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  <p>هذه الأداة لأغراض إرشادية وتجميلية عامة وليست بديلاً عن التشخيص الطبي.</p>
+</footer>
+
+<script src="js/questions.js"></script>
+<script src="js/knowledge.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
