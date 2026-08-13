@@ -1,12 +1,12 @@
 {
-  "gold_usd_oz": 4352.0,
-  "silver_usd_oz": 64.5,
+  "gold_usd_oz": 4351.9,
+  "silver_usd_oz": 64.55,
   "usd_egp": 50.21,
   "aed_egp": 13.67,
   "sar_egp": 13.39,
-  "uae_24": 513.86,
-  "uae_21": 449.63,
-  "egy_24": 7194.47,
-  "egy_21": 6295.16,
-  "silver_egy_gram": 104.12
+  "uae_24": 513.84,
+  "uae_21": 449.61,
+  "egy_24": 7194.19,
+  "egy_21": 6294.92,
+  "silver_egy_gram": 104.2
 }
