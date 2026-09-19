@@ -1,36 +1,48 @@
 name: Run Gold Bot
+
 on:
   schedule:
-    # مُزاح عن الدقائق المدورة (00, 10, 20...) لتقليل الزحمة والتأخير في جدولة GitHub Actions
-    - cron: '3,13,23,33,43,53 * * * *'
+    - cron: '7,37 * * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: gold-bot-state
+  cancel-in-progress: false
+
 jobs:
-  build:
+  run:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.12'
+          cache: pip
       - name: Install requirements
-        run: pip install -r requirements.txt
-      - name: Run script
+        run: pip install --requirement requirements.txt
+      - name: Run tracker
         run: python gold_bot.py
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-      - name: Commit updated price state
+          FORCE_REPORT: ${{ github.event_name == 'workflow_dispatch' }}
+          REPORT_HOURS_UTC: '6,18'
+          GOLD_OZ_ALERT_USD: '4000'
+          UAE_24_ALERT_AED: '475'
+          EGY_21_ALERT_EGP: '6500'
+          LOCAL_EGYPT_PREMIUM_EGP: '170'
+      - name: Commit state only when it changed
         run: |
-          if [ -n "$(git status --porcelain state.json)" ]; then
+          if ! git diff --quiet -- state.json; then
             git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add state.json
-            git commit -m "chore: update price state"
+            git commit -m "chore: update notification state"
             git push
           fi
