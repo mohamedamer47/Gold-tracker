@@ -35,7 +35,9 @@ def http_session():
         total=3,
         backoff_factor=0.6,
         status_forcelist=(429, 500, 502, 503, 504),
-        allowed_methods=("GET", "POST"),
+        # Retrying Telegram POST could duplicate a delivered message when the
+        # response is lost, so automatic retries are limited to safe reads.
+        allowed_methods=("GET",),
     )
     session = requests.Session()
     session.headers.update({"User-Agent": "gold-tracker/2.0"})
