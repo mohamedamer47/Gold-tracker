@@ -4,19 +4,19 @@
     "gold_oz": false,
     "uae_24": false
   },
-  "last_report_slot": "2026-09-28T18",
+  "last_report_slot": "2026-09-29T06",
   "prices": {
-    "aed_egp": 14.09,
-    "egy_21": 6155.55,
-    "egy_24": 7034.92,
-    "egypt_24_in_aed": 499.3,
-    "egypt_premium_aed": 12.07,
-    "gold_usd_oz": 4126.5,
-    "sar_egp": 13.8,
-    "silver_egy_gram": 101.33,
-    "silver_usd_oz": 60.91,
-    "uae_21": 426.33,
-    "uae_24": 487.23,
-    "usd_egp": 51.74
+    "aed_egp": 14.18,
+    "egy_21": 6211.77,
+    "egy_24": 7099.17,
+    "egypt_24_in_aed": 500.7,
+    "egypt_premium_aed": 11.99,
+    "gold_usd_oz": 4139.0,
+    "sar_egp": 13.89,
+    "silver_egy_gram": 101.74,
+    "silver_usd_oz": 60.77,
+    "uae_21": 427.62,
+    "uae_24": 488.71,
+    "usd_egp": 52.07
   }
 }
