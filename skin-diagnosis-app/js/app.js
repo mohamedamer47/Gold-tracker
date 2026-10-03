@@ -1,7 +1,10 @@
 /*
  * app.js
  * محرك الاستبيان: يبني قائمة الأسئلة ديناميكيًا حسب الإجابات، يعرضها خطوة بخطوة،
- * ثم يبني تقرير النتيجة النهائي بالاعتماد على knowledge.js
+ * يدير تبديل اللغة (عربي/إنجليزي)، ثم يبني تقرير النتيجة النهائي بالاعتماد على knowledge.js
+ * Quiz engine: builds the question list dynamically based on answers, renders it
+ * step by step, manages the Arabic/English language toggle, then builds the final
+ * result report using knowledge.js.
  */
 
 (function () {
@@ -12,6 +15,7 @@
     result: document.getElementById("screen-result"),
   };
 
+  const htmlRoot = document.getElementById("htmlRoot");
   const progressWrap = document.getElementById("progressWrap");
   const progressFill = document.getElementById("progressFill");
   const progressLabel = document.getElementById("progressLabel");
@@ -23,6 +27,53 @@
   let answers = {};
   let questionQueue = BASE_QUESTIONS.slice();
   let currentIndex = 0;
+  let currentLang = localStorage.getItem("skinAppLang") === "en" ? "en" : "ar";
+
+  function ui() {
+    return UI_STRINGS[currentLang];
+  }
+
+  function applyLangToDocument() {
+    htmlRoot.setAttribute("lang", currentLang);
+    htmlRoot.setAttribute("dir", currentLang === "en" ? "ltr" : "rtl");
+    document.querySelectorAll(".lang-btn").forEach((b) => {
+      b.classList.toggle("active", b.getAttribute("data-lang") === currentLang);
+    });
+  }
+
+  function renderStaticText() {
+    const s = ui();
+    document.getElementById("brandName").textContent = s.brandName;
+    document.getElementById("introTitle").textContent = s.introTitle;
+    document.getElementById("introLead").textContent = s.introLead;
+    document.getElementById("priceServiceTitle").textContent = s.priceServiceTitle;
+    document.getElementById("priceServiceDesc").textContent = s.priceServiceDesc;
+    document.getElementById("priceConsultTitle").textContent = s.priceConsultTitle;
+    document.getElementById("priceConsultDesc").textContent = s.priceConsultDesc;
+    document.getElementById("disclaimerIntro").textContent = s.disclaimerIntro;
+    document.getElementById("btnStart").textContent = s.btnStart;
+    document.getElementById("btnBack").textContent = s.btnBack;
+    document.getElementById("loadingText").textContent = s.loadingText;
+    document.getElementById("footerText").textContent = s.footerText;
+    document.title = currentLang === "en" ? "Smart Skin Diagnosis" : "تشخيص البشرة الذكي";
+  }
+
+  function setLanguage(lang) {
+    if (lang === currentLang) return;
+    currentLang = lang;
+    localStorage.setItem("skinAppLang", lang);
+    applyLangToDocument();
+    renderStaticText();
+    if (screens.quiz.classList.contains("active")) renderQuestion();
+    if (screens.result.classList.contains("active")) buildReport();
+  }
+
+  document.querySelectorAll(".lang-btn").forEach((btn) => {
+    btn.addEventListener("click", () => setLanguage(btn.getAttribute("data-lang")));
+  });
+
+  applyLangToDocument();
+  renderStaticText();
 
   function showScreen(name) {
     Object.values(screens).forEach((s) => s.classList.remove("active"));
@@ -75,7 +126,7 @@
   }
 
   function renderQuestion() {
-    // تخطي الأسئلة غير المرئية (شرطية)
+    // تخطي الأسئلة غير المرئية (شرطية) / skip conditional questions that don't apply
     while (currentIndex < questionQueue.length && !isVisible(currentQuestion())) {
       currentIndex++;
     }
@@ -89,8 +140,8 @@
     updateProgress();
     btnBack.disabled = currentIndex === 0;
 
-    let html = `<div class="q-title">${q.title}</div>`;
-    if (q.sub) html += `<div class="q-sub">${q.sub}</div>`;
+    let html = `<div class="q-title">${q.title[currentLang]}</div>`;
+    if (q.sub) html += `<div class="q-sub">${q.sub[currentLang]}</div>`;
     html += `<div class="options">`;
 
     q.options.forEach((opt) => {
@@ -101,7 +152,7 @@
       html += `
         <label class="option ${selected ? "selected" : ""}" data-value="${opt.value}">
           <input type="${q.type === "multi" ? "checkbox" : "radio"}" name="${q.id}" ${selected ? "checked" : ""} />
-          <span class="option-text">${opt.label}</span>
+          <span class="option-text">${opt.label[currentLang]}</span>
         </label>`;
     });
     html += `</div>`;
@@ -130,7 +181,7 @@
 
     btnNext.disabled = !isAnswered(q);
     btnNext.textContent =
-      currentIndex === questionQueue.length - 1 ? "عرض النتيجة" : "التالي";
+      currentIndex === questionQueue.length - 1 ? ui().btnShowResult : ui().btnNext;
   }
 
   btnNext.addEventListener("click", () => {
@@ -159,59 +210,41 @@
   }
 
   function buildReport() {
+    const s = ui();
     const skinInfo = SKIN_TYPE_INFO[answers.skinFeel] || SKIN_TYPE_INFO.normal;
     const selectedConcerns = (answers.concerns || []).filter((v) => v !== "none");
 
     const analyses = selectedConcerns
       .filter((c) => CONCERN_KB[c])
-      .map((c) => ({ key: c, info: CONCERN_KB[c], result: CONCERN_KB[c].analyze(answers) }));
+      .map((c) => ({ key: c, info: CONCERN_KB[c], result: CONCERN_KB[c].analyze(answers, currentLang) }));
 
     const urgentItems = analyses.filter((a) => a.result.urgent);
 
     // فحوصات عامة تستدعي تنبيهًا حتى لو لم تُذكر ضمن مشكلة معينة
+    // General alerts that apply regardless of which concerns were selected
     const generalAlerts = [];
-    if (answers.pregnancy === "yes") {
-      generalAlerts.push(
-        "أنتِ حامل/مرضعة: بعض المكونات الفعالة (مثل الريتينويدات وبعض الأحماض بتركيز عالٍ) غير مناسبة الآن. يُرجى استشارة الصيدلي أو الطبيب قبل استخدام أي منتج جديد."
-      );
-    }
-    if (answers.medication === "yes") {
-      generalAlerts.push(
-        "أنت تحت علاج طبي حاليًا: يُرجى مراجعة الصيدلي أو الطبيب المعالج قبل إضافة أي منتج جديد لتجنب أي تعارض."
-      );
-    }
-    if (answers.allergyIngredients === "yes") {
-      generalAlerts.push(
-        "لديك حساسية معروفة تجاه بعض المكونات: تأكد دائمًا من قراءة قائمة المكونات وعمل اختبار حساسية خلف الأذن قبل الاستخدام."
-      );
-    }
+    if (answers.pregnancy === "yes") generalAlerts.push(s.alertPregnancy);
+    if (answers.medication === "yes") generalAlerts.push(s.alertMedication);
+    if (answers.allergyIngredients === "yes") generalAlerts.push(s.alertAllergy);
 
-    // تجميع المكونات الفعالة المقترحة (بدون تكرار) لبناء روتين
-    const allIngredients = new Set();
-    analyses.forEach((a) => a.result.ingredients.forEach((i) => allIngredients.add(i)));
-
-    const needsSunProtection =
-      selectedConcerns.some((c) => ["wrinkles", "pigmentation", "dullness"].includes(c)) || true;
-    const needsExfoliation = selectedConcerns.some((c) =>
-      ["blackheads", "pores", "dullness"].includes(c)
-    );
-    const needsActiveTreatment = selectedConcerns.some((c) =>
-      ["acne", "wrinkles", "pigmentation"].includes(c)
-    );
+    const needsSunProtection = true;
+    const needsExfoliation = selectedConcerns.some((c) => ["blackheads", "pores", "dullness"].includes(c));
+    const needsActiveTreatment = selectedConcerns.some((c) => ["acne", "wrinkles", "pigmentation"].includes(c));
+    const needsVitaminC = selectedConcerns.some((c) => ["wrinkles", "pigmentation", "dullness"].includes(c));
 
     let html = "";
 
     html += `
       <div class="result-header">
-        <h1>تقرير تحليل البشرة الخاص بك</h1>
-        <div class="skin-type-badge">نوع بشرتك: ${skinInfo.label}</div>
-        <p class="q-sub" style="margin-top:10px;">${skinInfo.tip}</p>
+        <h1>${s.resultTitle}</h1>
+        <div class="skin-type-badge">${s.resultSkinTypePrefix} ${skinInfo.label[currentLang]}</div>
+        <p class="q-sub" style="margin-top:10px;">${skinInfo.tip[currentLang]}</p>
       </div>`;
 
     if (urgentItems.length > 0 || generalAlerts.length > 0) {
-      html += `<div class="alert-box"><strong>⚠️ نوصي بمتابعة طبية / صيدلانية قريبًا بخصوص:</strong><ul style="margin:6px 0;padding-inline-start:20px;">`;
+      html += `<div class="alert-box"><strong>${s.alertBoxTitle}</strong><ul style="margin:6px 0;padding-inline-start:20px;">`;
       urgentItems.forEach((a) => {
-        html += `<li>${a.info.label}: ${a.result.urgentReason}</li>`;
+        html += `<li>${a.info.label[currentLang]}: ${a.result.urgentReason}</li>`;
       });
       generalAlerts.forEach((g) => {
         html += `<li>${g}</li>`;
@@ -220,76 +253,73 @@
     }
 
     if (analyses.length > 0) {
-      html += `<div class="section-title">تحليل مشاكل بشرتك</div>`;
+      html += `<div class="section-title">${s.sectionAnalysis}</div>`;
       analyses.forEach((a) => {
         const r = a.result;
         html += `
           <div class="concern-block">
-            <h3>${a.info.icon} ${a.info.label} <span class="severity-pill severity-${r.severity}">${severityLabel(r.severity)}</span></h3>
-            <h4>الأسباب المحتملة</h4>
+            <h3>${a.info.icon} ${a.info.label[currentLang]} <span class="severity-pill severity-${r.severity}">${severityLabel(r.severity, currentLang)}</span></h3>
+            <h4>${s.causesLabel}</h4>
             <ul>${r.causes.map((c) => `<li>${c}</li>`).join("")}</ul>
-            <h4>مكونات فعالة يُنصح بالبحث عنها في المنتجات</h4>
+            <h4>${s.ingredientsLabel}</h4>
             <ul>${r.ingredients.map((i) => `<li>${i}</li>`).join("")}</ul>
-            <h4>وصفات ونصائح طبيعية عامة</h4>
+            <h4>${s.naturalLabel}</h4>
             <ul>${r.natural.map((n) => `<li>${n}</li>`).join("")}</ul>
-            <h4>نصائح إضافية</h4>
+            <h4>${s.tipsLabel}</h4>
             <ul>${r.tips.map((t) => `<li>${t}</li>`).join("")}</ul>
           </div>`;
       });
     } else {
-      html += `<div class="section-title">حالة بشرتك</div>
-        <p>لم تذكر مشاكل واضحة، لذا التركيز سيكون على روتين وقائي للحفاظ على صحة ونضارة بشرتك.</p>`;
+      html += `<div class="section-title">${s.noConcernsTitle}</div><p>${s.noConcernsText}</p>`;
     }
 
-    html += `<div class="section-title">روتين العناية المقترح</div>`;
+    html += `<div class="section-title">${s.sectionRoutine}</div>`;
 
     html += `
       <div class="routine-block">
-        <h3>🌞 الروتين الصباحي</h3>
+        <h3>${s.routineMorningTitle}</h3>
         <ol>
-          <li>غسول لطيف مناسب لنوع بشرتك (${skinInfo.label})</li>
-          ${allIngredients.has("فيتامين C لتفتيح البقع ومضاد أكسدة") || allIngredients.has("فيتامين C صباحًا لإشراقة فورية") || allIngredients.has("فيتامين C كمضاد أكسدة وتفتيح صباحي") ? "<li>سيروم فيتامين C (مضاد أكسدة وتفتيح)</li>" : ""}
-          <li>مرطب مناسب لنوع بشرتك</li>
-          <li>واقي شمس بعامل حماية SPF 30 فأكثر - خطوة أساسية لا يمكن تجاهلها</li>
+          <li>${s.stepCleanser(skinInfo.label[currentLang])}</li>
+          ${needsVitaminC ? `<li>${s.stepVitaminC}</li>` : ""}
+          <li>${s.stepMoisturizer}</li>
+          <li>${s.stepSpf}</li>
         </ol>
       </div>
       <div class="routine-block">
-        <h3>🌙 الروتين المسائي</h3>
+        <h3>${s.routineEveningTitle}</h3>
         <ol>
-          <li>تنظيف مزدوج إذا كنتِ تستخدمين مكياج/واقي شمس (زيت أو منظف زيتي ثم غسول عادي)</li>
-          ${needsActiveTreatment ? "<li>سيروم أو علاج موضعي يحتوي المكون الفعال المناسب لمشكلتك (راجع قسم التحليل أعلاه) - يُدخل تدريجيًا 2-3 مرات أسبوعيًا في البداية</li>" : ""}
-          <li>مرطب ليلي</li>
+          <li>${s.stepDoubleCleanse}</li>
+          ${needsActiveTreatment ? `<li>${s.stepActiveTreatment}</li>` : ""}
+          <li>${s.stepNightMoisturizer}</li>
         </ol>
       </div>
       <div class="routine-block">
-        <h3>📅 روتين أسبوعي إضافي</h3>
+        <h3>${s.routineWeeklyTitle}</h3>
         <ol>
-          ${needsExfoliation ? "<li>تقشير لطيف (كيميائي أو طبيعي خفيف) 1-2 مرة أسبوعيًا</li>" : "<li>تقشير لطيف مرة أسبوعيًا للحفاظ على النضارة</li>"}
-          <li>ماسك ترطيب أو تهدئة حسب احتياج بشرتك (راجع الوصفات الطبيعية في قسم التحليل)</li>
+          <li>${needsExfoliation ? s.stepExfoliationTargeted : s.stepExfoliationGeneral}</li>
+          <li>${s.stepWeeklyMask}</li>
         </ol>
       </div>`;
 
     html += `
-      <div class="section-title">الخطوة التالية</div>
-      <p>هذا التقرير التحليلي المفصل يمثل <strong>خدمتنا الرقمية (٢٠$)</strong> ويمكنك الاحتفاظ به أو طباعته كمرجع لروتين عنايتك.
-      للحالات التي تحتاج تقييمًا دقيقًا أو علاجًا موصوفًا (كما هو موضح في التنبيهات أعلاه إن وجدت)، ننصح بحجز
-      <strong>كشف مباشر مع أخصائي جلدية أو صيدلي (١٠٠$)</strong> لمتابعة حالتك عن قرب.</p>
+      <div class="section-title">${s.nextStepsTitle}</div>
+      <p>${s.nextStepsText}</p>
 
       <div class="cta-section">
-        <button class="btn btn-outline btn-block" id="btnPrint">🖨️ حفظ / طباعة التقرير (٢٠$)</button>
-        <button class="btn btn-primary btn-block" id="btnBook">📅 احجز كشف مع أخصائي (١٠٠$)</button>
+        <button class="btn btn-outline btn-block" id="btnPrint">${s.btnPrint}</button>
+        <button class="btn btn-primary btn-block" id="btnBook">${s.btnBook}</button>
       </div>
 
       <form class="contact-form" id="contactForm">
-        <p class="form-note">اترك بياناتك وسنتواصل معك لتحديد موعد الكشف (١٠٠$).</p>
-        <input type="text" placeholder="الاسم الكامل" id="cf_name" required />
-        <input type="text" placeholder="رقم الهاتف أو البريد الإلكتروني" id="cf_contact" required />
-        <textarea placeholder="أي تفاصيل إضافية تود ذكرها (اختياري)" id="cf_notes" rows="3"></textarea>
-        <button type="submit" class="btn btn-primary btn-block">إرسال طلب الحجز</button>
+        <p class="form-note">${s.contactFormNote}</p>
+        <input type="text" placeholder="${s.contactFormName}" id="cf_name" required />
+        <input type="text" placeholder="${s.contactFormContact}" id="cf_contact" required />
+        <textarea placeholder="${s.contactFormNotes}" id="cf_notes" rows="3"></textarea>
+        <button type="submit" class="btn btn-primary btn-block">${s.contactFormSubmit}</button>
       </form>
 
       <div class="result-footer">
-        <button class="restart-link" id="btnRestart">إعادة الاختبار من البداية</button>
+        <button class="restart-link" id="btnRestart">${s.restartLink}</button>
       </div>`;
 
     resultContainer.innerHTML = html;
@@ -301,9 +331,7 @@
     document.getElementById("contactForm").addEventListener("submit", (e) => {
       e.preventDefault();
       const form = e.target;
-      form.innerHTML = `<p style="color:var(--success);font-weight:700;">
-        تم استلام طلبك بنجاح! سنتواصل معك قريبًا لتأكيد موعد الكشف (١٠٠$).
-      </p>`;
+      form.innerHTML = `<p style="color:var(--success);font-weight:700;">${ui().contactFormThanks}</p>`;
     });
     document.getElementById("btnRestart").addEventListener("click", () => {
       showScreen("intro");

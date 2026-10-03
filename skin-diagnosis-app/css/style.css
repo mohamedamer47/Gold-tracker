@@ -49,6 +49,34 @@ body {
 }
 .brand-icon { font-size: 1.4rem; }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.lang-switch {
+  display: flex;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.lang-btn {
+  border: none;
+  background: transparent;
+  padding: 7px 14px;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: background .15s ease, color .15s ease;
+}
+.lang-btn.active {
+  background: linear-gradient(90deg, var(--pink), var(--pink-dark));
+  color: #fff;
+}
+
 .progress-wrap {
   display: flex;
   align-items: center;
