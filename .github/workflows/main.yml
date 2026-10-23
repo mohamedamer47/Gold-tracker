@@ -33,7 +33,7 @@ jobs:
           CHAT_ID: ${{ secrets.CHAT_ID }}
           FORCE_REPORT: ${{ github.event_name == 'workflow_dispatch' }}
           REPORT_HOURS_UTC: '6,18'
-          GOLD_OZ_ALERT_USD: '4000'
+          GOLD_OZ_ALERT_USD: '3900'
           UAE_24_ALERT_AED: '475'
           EGY_21_ALERT_EGP: '6500'
           LOCAL_EGYPT_PREMIUM_EGP: '170'
