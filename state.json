@@ -2,7 +2,7 @@
   "alerts": {
     "egy_21": true,
     "gold_oz": false,
-    "uae_24": true
+    "uae_24": false
   },
   "last_report_slot": "2026-10-26T06",
   "prices": {
